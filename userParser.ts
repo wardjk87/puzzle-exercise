@@ -39,7 +39,14 @@ function userParserWithSort(input: string): string {
       if (levelValue[`${currentLevel}`]?.values){
         levelValue[`${currentLevel}`].values = [...levelValue[`${currentLevel}`].values, currentValue];
       } else {
-        levelValue[`${currentLevel}`] = { parent: '', values: [currentValue] };
+        if (currentLevel > 0) {
+          const valuesOfPreviousLevel = levelValue[`${currentLevel - 1}`].values;
+          const parent= valuesOfPreviousLevel[valuesOfPreviousLevel.length - 1];
+          levelValue[`${currentLevel}`] = { parent, values: [currentValue] };
+        } else {
+          levelValue[`${currentLevel}`] = { parent: 'root', values: [currentValue] };
+        }
+
       }
 
       output += addNewLine(leadingWhiteSpaces, currentValue);
@@ -56,7 +63,13 @@ function userParserWithSort(input: string): string {
       if (levelValue[`${currentLevel}`]?.values){
         levelValue[`${currentLevel}`].values = [...levelValue[`${currentLevel}`].values, currentValue];
       } else {
-        levelValue[`${currentLevel}`] = { parent: '', values: [currentValue] };
+        if (currentLevel > 0) {
+          const valuesOfPreviousLevel = levelValue[`${currentLevel - 1}`].values;
+          const parent= valuesOfPreviousLevel[valuesOfPreviousLevel.length - 1];
+          levelValue[`${currentLevel}`] = { parent, values: [currentValue] };
+        } else {
+          levelValue[`${currentLevel}`] = { parent: 'root', values: [currentValue] };
+        }
       }
       output += addNewLine(leadingWhiteSpaces, currentValue);
       currentLevel += 1;
@@ -71,7 +84,13 @@ function userParserWithSort(input: string): string {
         if (levelValue[`${currentLevel}`]?.values){
           levelValue[`${currentLevel}`].values = [...levelValue[`${currentLevel}`].values, currentValue];
         } else {
-          levelValue[`${currentLevel}`] = { parent: '', values: [currentValue] };
+          if (currentLevel > 0) {
+            const valuesOfPreviousLevel = levelValue[`${currentLevel - 1}`].values;
+            const parent= valuesOfPreviousLevel[valuesOfPreviousLevel.length - 1];
+            levelValue[`${currentLevel}`] = { parent, values: [currentValue] };
+          } else {
+            levelValue[`${currentLevel}`] = { parent: 'root', values: [currentValue] };
+          }
         }
         console.log('currentValue', currentValue, leadingWhiteSpaces)
         output += addNewLine(leadingWhiteSpaces, currentValue);
