@@ -69,13 +69,14 @@ function userParserV2(input: string): string {
     console.log('rootLevel', rootLevel)
     const rootDataLevel = rootLevel?.level;
 
-    if (rootDataLevel === undefined || isNaN(rootDataLevel)) {
+    if (!rootLevel || rootDataLevel === undefined || isNaN(rootDataLevel)) {
       throw new Error('LevelValue object does not contain a root');
     }
 
     const sortedLevels = levelValue.map(levelValue => levelValue.level).sort();
     const maxLevel = sortedLevels.pop();
     const sortedRootValues = rootLevel.values.sort();
+    console.log('sortedRootValues', sortedRootValues, maxLevel)
 
     sortedRootValues.forEach((value) => {
       output += ('\n' + (new Array(rootDataLevel * 2).join(' ')) + `- ${value}`);
@@ -83,7 +84,7 @@ function userParserV2(input: string): string {
 
       if (maxLevel && currentLevel < maxLevel) {
         const childLevel = currentLevel + 1;
-        output += setLevelOutputs(levelValue, childLevel, maxLevel, value);
+        output += setLevelOutputs(levelValue, childLevel, rootLevel.parent, maxLevel, value);
       }
     });
 
@@ -179,27 +180,19 @@ function setLevelValue(levelValue: LevelValue[], currentLevel: number, currentVa
   return updatedLevelValue;
 }
 
-function setLevelOutputs(levelValue: LevelValue[], currentLevel: number, maxLevel: number, currentValue: string): string {
+function setLevelOutputs(levelValue: LevelValue[], currentLevel: number, currentParent: string, maxLevel: number, currentValue: string): string {
   let output = '';
 
-  let parent = 'root';
-
-  if (currentLevel > 0) {
-    const previousLevelValue = levelValue.filter(data => data.level === (currentLevel - 1)).pop();
-    parent = previousLevelValue?.values[previousLevelValue.values.length - 1] ?? '';
-    if (!parent) {
-      throw new Error("Parent not found")
-    }
-  }
-
-  if (parent === currentValue) {
-    const childValuesSorted = levelValue[currentLevel].values.sort();
+  const match = levelValue.find(data => data.level === currentLevel && data.parent === currentValue);
+  console.log('match', match, currentValue, currentParent, currentLevel);
+  if (match) {
+    const childValuesSorted = match.values.sort();
 
     childValuesSorted.forEach((value) => {
       output += ('\n' + (new Array((currentLevel) * 2).join(' ')) + `- ${value}`);
 
       if (Number(currentLevel) < maxLevel) {
-        output += setLevelOutputs(levelValue, currentLevel, maxLevel, value);
+        output += setLevelOutputs(levelValue, currentLevel + 1, match.parent, maxLevel, value);
       }
     });
   }
