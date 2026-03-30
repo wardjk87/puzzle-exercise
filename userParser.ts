@@ -1,5 +1,6 @@
 const TEST_INPUT = "(id, name, email, type(id, name, customFields(c1, c2, c3)), externalId)";
-const PARENTHESIS = ['(', ')']
+const PARENTHESIS = ['(', ')'];
+
 function userParser(input: string): string {
   if (typeof input !== "string"){
     throw new Error('Input is not a valid string')
@@ -89,22 +90,7 @@ function userParser(input: string): string {
     }
   }
 
-  console.log('parentValues', parentValues);
-  console.log('output', output);
-
-  const splitValues = splitInputByComma(commaDelimitedValuesStringified);
-  console.log('splitValues', splitValues)
-
-  // for (let i = 0; i < splitValues.length; i++) {
-  //   const indexValue = splitValues[i];
-  //   if (indexValue.includes('(') || in)
-  //   splitValues[i];
-  // }
-  return splitValues.toString();
-}
-
-function splitInputByComma(input: string): string[] {
-  return input.split(',');
+  return output;
 }
 
 function removeRootParenthesis(input: string): string {
