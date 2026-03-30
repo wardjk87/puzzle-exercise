@@ -18,9 +18,9 @@ function userParser(input: string): string {
   let output: string = '';
   console.log('CommaDelimitedValuesStringified', commaDelimitedValuesStringified)
   console.log('split', split)
-  const parentValues: string[] = [];
   let leadingWhiteSpaces = 0;
   let currentValue: string = '';
+
   for (let i = 0; i < commaDelimitedValuesStringified.length; i++) {
     const indexValue = commaDelimitedValuesStringified[i];
 
@@ -40,32 +40,19 @@ function userParser(input: string): string {
       if (!currentValue) {
         continue;
       }
-      if (leadingWhiteSpaces) {
-        output += ('\n' + (new Array(leadingWhiteSpaces).join(' ')) + `- ${currentValue}`);
-        parentValues.push('\n' + (new Array(leadingWhiteSpaces).join(' ')) + `- ${currentValue}`);
-        currentValue = '';
-      } else {
-        output += (`\n- ${currentValue}`);
-        parentValues.push(`\n- ${currentValue}`);
-        currentValue = '';
-      }
 
+      output += addNewLine(leadingWhiteSpaces, currentValue);
+      currentValue = '';
       continue;
     }
 
     if (indexValue !== '(' && indexValue !== ')') {
       currentValue += indexValue;
-      // currentValue.concat(indexValue);
+      continue;
     }
 
     if (indexValue === '(') {
-      if (leadingWhiteSpaces) {
-        output += ('\n' + (new Array(leadingWhiteSpaces).join(' ')) + `- ${currentValue}`);
-        parentValues.push('\n' + (new Array(leadingWhiteSpaces).join(' ')) + `- ${currentValue}`);
-      } else {
-        output += (`\n- ${currentValue}`);
-        parentValues.push(`\n- ${currentValue}`);
-      }
+      output += addNewLine(leadingWhiteSpaces, currentValue);
       leadingWhiteSpaces += 2;
 
       currentValue = '';
@@ -75,13 +62,7 @@ function userParser(input: string): string {
     if (indexValue === ')') {
       if (currentValue) {
         console.log('currentValue', currentValue, leadingWhiteSpaces)
-        if (leadingWhiteSpaces) {
-          output += ('\n' + (new Array(leadingWhiteSpaces).join(' ')) + `- ${currentValue}`);
-          parentValues.push('\n' + (new Array(leadingWhiteSpaces).join(' ')) + `- ${currentValue}`);
-        } else {
-          output += (`\n- ${currentValue}`);
-          parentValues.push(`\n- ${currentValue}`);
-        }
+        output += addNewLine(leadingWhiteSpaces, currentValue);
       }
 
       leadingWhiteSpaces -= 2;
@@ -91,6 +72,15 @@ function userParser(input: string): string {
   }
 
   return output;
+}
+
+function addNewLine(leadingWhiteSpaces: number, currentValue: string) {
+  if (leadingWhiteSpaces) {
+    // parentValues.push('\n' + (new Array(leadingWhiteSpaces).join(' ')) + `- ${currentValue}`);
+    return ('\n' + (new Array(leadingWhiteSpaces).join(' ')) + `- ${currentValue}`);
+  }
+  // parentValues.push(`\n- ${currentValue}`);
+  return (`\n- ${currentValue}`);
 }
 
 function removeRootParenthesis(input: string): string {
