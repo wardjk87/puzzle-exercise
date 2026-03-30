@@ -1,4 +1,5 @@
-const TEST_INPUT = "(id, name, email, type(id, name, customFields(c1, c2, c3)), externalId, config(fontSettings, screenSettings))";
+const TEST_INPUT = "(id, name, email, type(id, name, customFields(c1, c2, c3)), externalId)";
+const TEST_INPUT_2 = "(id, name, email, type(id, name, customFields(c1, z2, c3, phoneInfo(platform, model, year))), externalId, config(fontSettings, screenSettings))";
 
 type LevelValue = {values: string[], parent: string, level: number };
 
@@ -62,11 +63,9 @@ function userParserV2(input: string): string {
   try {
     const processedInput = prepareInputForParser(input);
     const levelValue = parseInputIntoLevelObject(processedInput);
-    console.log('levelValue1', levelValue);
     let output = '';
 
     const rootLevel = levelValue.find(data => data.parent === 'root');
-    console.log('rootLevel', rootLevel)
     const rootDataLevel = rootLevel?.level;
 
     if (!rootLevel || rootDataLevel === undefined || isNaN(rootDataLevel)) {
@@ -76,7 +75,6 @@ function userParserV2(input: string): string {
     const sortedLevels = levelValue.map(levelValue => levelValue.level).sort();
     const maxLevel = sortedLevels.pop();
     const sortedRootValues = rootLevel.values.sort();
-    console.log('sortedRootValues', sortedRootValues, maxLevel)
 
     sortedRootValues.forEach((value) => {
       output += ('\n' + (new Array(rootDataLevel * 2).join(' ')) + `- ${value}`);
@@ -162,7 +160,6 @@ function setLevelValue(levelValue: LevelValue[], currentLevel: number, currentVa
   }
 
   if (levelValue.some(data => data.level === currentLevel && data.parent === parent)){
-    console.log('has already')
     updatedLevelValue = updatedLevelValue.map(data => {
       if (data.level === currentLevel && data.parent === parent) {
         return {...data, values: [...data.values, currentValue]}
@@ -184,7 +181,7 @@ function setLevelOutputs(levelValue: LevelValue[], currentLevel: number, current
   let output = '';
 
   const match = levelValue.find(data => data.level === currentLevel && data.parent === currentValue);
-  console.log('match', match, currentValue, currentParent, currentLevel);
+
   if (match) {
     const childValuesSorted = match.values.sort();
 
@@ -225,8 +222,12 @@ function prepareInputForParser(input: string): string {
   return removeRootParenthesis(inputTrimmed)
 }
 
-// const outputV1 = userParserV1(TEST_INPUT);
+const outputV1 = userParserV1(TEST_INPUT);
 const outputV2 = userParserV2(TEST_INPUT);
-// console.log('userParserV1 output: ', outputV1)
-console.log('userParserV2 output: ', outputV2)
+const outputV1Test2 = userParserV1(TEST_INPUT_2);
+const outputV2Test2 = userParserV2(TEST_INPUT_2);
+console.log('userParserV1 output test 1: ', outputV1)
+console.log('userParserV2 output test 1: ', outputV2)
+console.log('userParserV1 output test 2: ', outputV1Test2)
+console.log('userParserV2 output test 2: ', outputV2Test2)
 
