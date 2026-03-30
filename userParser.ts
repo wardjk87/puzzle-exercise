@@ -64,8 +64,34 @@ function userParserWithSort(input: string): string {
       continue;
     }
   }
+  let output = '';
+
+  Object.keys(levelValue).forEach((level) => {
+    const sortedValues = levelValue[level].values.sort();
+    console.log('sortedValues', sortedValues);
+
+    sortedValues.forEach((value) => {
+      output += ('\n' + (new Array(Number(level) * 2).join(' ')) + `- ${value}`);
+
+        if (levelValue[Number(level) + 1]?.parent === value) {
+          const childValuesSorted = levelValue[Number(level) + 1].values.sort();
+
+          childValuesSorted.forEach((value) => {
+            output += ('\n' + (new Array((Number(level) + 1) * 2).join(' ')) + `- ${value}`);
+
+            if (levelValue[Number(level) + 2]?.parent === value) {
+              const grandChildValuesSorted = levelValue[Number(level) + 2].values.sort();
+              grandChildValuesSorted.forEach((value) => {
+                output += ('\n' + (new Array((Number(level) + 2) * 2).join(' ')) + `- ${value}`);
+              });
+            }
+          });
+        }
+    });
+  });
 
   console.log('level value', levelValue)
+  console.log('output value', output)
 
   return '';
 }
