@@ -14,26 +14,37 @@ function userParser(input: string): string {
   const commaDelimitedValuesStringified = removeRootParenthesis(inputTrimmed)
 
   const split = commaDelimitedValuesStringified.split('(');
-  const output: string = '';
+  let output: string = '';
   console.log('CommaDelimitedValuesStringified', commaDelimitedValuesStringified)
   console.log('split', split)
   const parentValues: string[] = [];
-  const output: string = '';
   let leadingWhiteSpaces = 0;
-
   let currentValue: string = '';
   for (let i = 0; i < commaDelimitedValuesStringified.length; i++) {
     const indexValue = commaDelimitedValuesStringified[i];
 
-    if (!indexValue) {
+    if (indexValue === ' ') {
       continue;
     }
 
-    if (indexValue === ',') {
+    console.log('indexValue', indexValue)
+
+    const lastValue = i === commaDelimitedValuesStringified.length - 1;
+
+    if (indexValue === ',' || lastValue) {
+      if (lastValue) {
+        currentValue += indexValue;
+      }
+
+      if (!currentValue) {
+        continue;
+      }
       if (leadingWhiteSpaces) {
-        parentValues.push('\n' + (new Array(leadingWhiteSpaces).join(' ')) + ` - ${currentValue}`);
+        output += ('\n' + (new Array(leadingWhiteSpaces).join(' ')) + `- ${currentValue}`);
+        parentValues.push('\n' + (new Array(leadingWhiteSpaces).join(' ')) + `- ${currentValue}`);
         currentValue = '';
       } else {
+        output += (`\n- ${currentValue}`);
         parentValues.push(`\n- ${currentValue}`);
         currentValue = '';
       }
@@ -42,27 +53,44 @@ function userParser(input: string): string {
     }
 
     if (indexValue !== '(' && indexValue !== ')') {
-      currentValue.concat(indexValue);
+      currentValue += indexValue;
+      // currentValue.concat(indexValue);
     }
 
     if (indexValue === '(') {
+      if (leadingWhiteSpaces) {
+        output += ('\n' + (new Array(leadingWhiteSpaces).join(' ')) + `- ${currentValue}`);
+        parentValues.push('\n' + (new Array(leadingWhiteSpaces).join(' ')) + `- ${currentValue}`);
+      } else {
+        output += (`\n- ${currentValue}`);
+        parentValues.push(`\n- ${currentValue}`);
+      }
       leadingWhiteSpaces += 2;
-      parentValues.push(`\n- ${currentValue}`);
+
       currentValue = '';
       continue;
     }
 
     if (indexValue === ')') {
+      if (currentValue) {
+        console.log('currentValue', currentValue, leadingWhiteSpaces)
+        if (leadingWhiteSpaces) {
+          output += ('\n' + (new Array(leadingWhiteSpaces).join(' ')) + `- ${currentValue}`);
+          parentValues.push('\n' + (new Array(leadingWhiteSpaces).join(' ')) + `- ${currentValue}`);
+        } else {
+          output += (`\n- ${currentValue}`);
+          parentValues.push(`\n- ${currentValue}`);
+        }
+      }
+
       leadingWhiteSpaces -= 2;
-      parentValues.push(`\n- ${currentValue}`);
       currentValue = '';
       continue;
     }
-
-    currentValue += indexValue;
   }
 
   console.log('parentValues', parentValues);
+  console.log('output', output);
 
   const splitValues = splitInputByComma(commaDelimitedValuesStringified);
   console.log('splitValues', splitValues)
