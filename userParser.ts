@@ -1,5 +1,7 @@
 const TEST_INPUT = "(id, name, email, type(id, name, customFields(c1, c2, c3)), externalId)";
 
+type LevelValue = { [level: string]: {values: string[], parent: string }};
+
 function userParserWithSort(input: string): string {
   if (typeof input !== "string"){
     throw new Error('Input is not a valid string')
@@ -12,11 +14,9 @@ function userParserWithSort(input: string): string {
 
   const commaDelimitedValuesStringified = removeRootParenthesis(inputTrimmed)
 
-  let output: string = '';
-  let leadingWhiteSpaces = 0;
   let currentValue: string = '';
   let currentLevel = 0;
-  const levelValue : { [level: string]: {values: string[], parent: string }} = {};
+  let levelValue: LevelValue = {};
 
   for (let i = 0; i < commaDelimitedValuesStringified.length; i++) {
     const indexValue = commaDelimitedValuesStringified[i];
@@ -36,20 +36,7 @@ function userParserWithSort(input: string): string {
         continue;
       }
 
-      if (levelValue[`${currentLevel}`]?.values){
-        levelValue[`${currentLevel}`].values = [...levelValue[`${currentLevel}`].values, currentValue];
-      } else {
-        if (currentLevel > 0) {
-          const valuesOfPreviousLevel = levelValue[`${currentLevel - 1}`].values;
-          const parent= valuesOfPreviousLevel[valuesOfPreviousLevel.length - 1];
-          levelValue[`${currentLevel}`] = { parent, values: [currentValue] };
-        } else {
-          levelValue[`${currentLevel}`] = { parent: 'root', values: [currentValue] };
-        }
-
-      }
-
-      output += addNewLine(leadingWhiteSpaces, currentValue);
+      levelValue = setLevelValue(levelValue, currentLevel, currentValue);
       currentValue = '';
       continue;
     }
@@ -60,20 +47,8 @@ function userParserWithSort(input: string): string {
     }
 
     if (indexValue === '(') {
-      if (levelValue[`${currentLevel}`]?.values){
-        levelValue[`${currentLevel}`].values = [...levelValue[`${currentLevel}`].values, currentValue];
-      } else {
-        if (currentLevel > 0) {
-          const valuesOfPreviousLevel = levelValue[`${currentLevel - 1}`].values;
-          const parent= valuesOfPreviousLevel[valuesOfPreviousLevel.length - 1];
-          levelValue[`${currentLevel}`] = { parent, values: [currentValue] };
-        } else {
-          levelValue[`${currentLevel}`] = { parent: 'root', values: [currentValue] };
-        }
-      }
-      output += addNewLine(leadingWhiteSpaces, currentValue);
+      levelValue = setLevelValue(levelValue, currentLevel, currentValue);
       currentLevel += 1;
-      leadingWhiteSpaces += 2;
 
       currentValue = '';
       continue;
@@ -81,23 +56,10 @@ function userParserWithSort(input: string): string {
 
     if (indexValue === ')') {
       if (currentValue) {
-        if (levelValue[`${currentLevel}`]?.values){
-          levelValue[`${currentLevel}`].values = [...levelValue[`${currentLevel}`].values, currentValue];
-        } else {
-          if (currentLevel > 0) {
-            const valuesOfPreviousLevel = levelValue[`${currentLevel - 1}`].values;
-            const parent= valuesOfPreviousLevel[valuesOfPreviousLevel.length - 1];
-            levelValue[`${currentLevel}`] = { parent, values: [currentValue] };
-          } else {
-            levelValue[`${currentLevel}`] = { parent: 'root', values: [currentValue] };
-          }
-        }
-        console.log('currentValue', currentValue, leadingWhiteSpaces)
-        output += addNewLine(leadingWhiteSpaces, currentValue);
+        levelValue = setLevelValue(levelValue, currentLevel, currentValue);
       }
 
       currentLevel -= 1;
-      leadingWhiteSpaces -= 2;
       currentValue = '';
       continue;
     }
@@ -105,7 +67,24 @@ function userParserWithSort(input: string): string {
 
   console.log('level value', levelValue)
 
-  return output;
+  return '';
+}
+
+function setLevelValue(levelValue: LevelValue, currentLevel: number, currentValue: string) {
+  const updatedLevelValue = {...levelValue};
+  if (levelValue[`${currentLevel}`]?.values){
+    updatedLevelValue[`${currentLevel}`].values = [...levelValue[`${currentLevel}`].values, currentValue];
+  } else {
+    if (currentLevel > 0) {
+      const valuesOfPreviousLevel = levelValue[`${currentLevel - 1}`].values;
+      const parent= valuesOfPreviousLevel[valuesOfPreviousLevel.length - 1];
+      updatedLevelValue[`${currentLevel}`] = { parent, values: [currentValue] };
+    } else {
+      updatedLevelValue[`${currentLevel}`] = { parent: 'root', values: [currentValue] };
+    }
+  }
+
+  return updatedLevelValue;
 }
 
 function userParser(input: string): string {
