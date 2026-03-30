@@ -66,28 +66,32 @@ function userParserWithSort(input: string): string {
   }
   let output = '';
 
-  Object.keys(levelValue).forEach((level) => {
-    const sortedValues = levelValue[level].values.sort();
-    console.log('sortedValues', sortedValues);
+  const rootDataLevel = Object.keys(levelValue).find(key => levelValue[key].parent === 'root');
+  if (!rootDataLevel) {
+    throw new Error('Input is not a valid parenthetical value without root');
+  }
 
-    sortedValues.forEach((value) => {
-      output += ('\n' + (new Array(Number(level) * 2).join(' ')) + `- ${value}`);
+  console.log('rootDataKey', rootDataLevel);
+  const sortedValues = levelValue[rootDataLevel].values.sort();
+  console.log('sortedValues', sortedValues);
 
-        if (levelValue[Number(level) + 1]?.parent === value) {
-          const childValuesSorted = levelValue[Number(level) + 1].values.sort();
+  sortedValues.forEach((value) => {
+    output += ('\n' + (new Array(Number(rootDataLevel) * 2).join(' ')) + `- ${value}`);
 
-          childValuesSorted.forEach((value) => {
-            output += ('\n' + (new Array((Number(level) + 1) * 2).join(' ')) + `- ${value}`);
+      if (levelValue[Number(rootDataLevel) + 1]?.parent === value) {
+        const childValuesSorted = levelValue[Number(rootDataLevel) + 1].values.sort();
 
-            if (levelValue[Number(level) + 2]?.parent === value) {
-              const grandChildValuesSorted = levelValue[Number(level) + 2].values.sort();
-              grandChildValuesSorted.forEach((value) => {
-                output += ('\n' + (new Array((Number(level) + 2) * 2).join(' ')) + `- ${value}`);
-              });
-            }
-          });
-        }
-    });
+        childValuesSorted.forEach((value) => {
+          output += ('\n' + (new Array((Number(rootDataLevel) + 1) * 2).join(' ')) + `- ${value}`);
+
+          if (levelValue[Number(rootDataLevel) + 2]?.parent === value) {
+            const grandChildValuesSorted = levelValue[Number(rootDataLevel) + 2].values.sort();
+            grandChildValuesSorted.forEach((value) => {
+              output += ('\n' + (new Array((Number(rootDataLevel) + 2) * 2).join(' ')) + `- ${value}`);
+            });
+          }
+        });
+      }
   });
 
   console.log('level value', levelValue)
