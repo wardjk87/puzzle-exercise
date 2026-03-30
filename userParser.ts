@@ -11,13 +11,9 @@ function userParser(input: string): string {
     throw new Error('Input is not a valid parenthetical value');
   }
 
-
   const commaDelimitedValuesStringified = removeRootParenthesis(inputTrimmed)
 
-  const split = commaDelimitedValuesStringified.split('(');
   let output: string = '';
-  console.log('CommaDelimitedValuesStringified', commaDelimitedValuesStringified)
-  console.log('split', split)
   let leadingWhiteSpaces = 0;
   let currentValue: string = '';
 
@@ -27,8 +23,6 @@ function userParser(input: string): string {
     if (indexValue === ' ') {
       continue;
     }
-
-    console.log('indexValue', indexValue)
 
     const lastValue = i === commaDelimitedValuesStringified.length - 1;
 
