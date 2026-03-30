@@ -67,37 +67,53 @@ function userParserWithSort(input: string): string {
   let output = '';
 
   const rootDataLevel = Object.keys(levelValue).find(key => levelValue[key].parent === 'root');
+
   if (!rootDataLevel) {
     throw new Error('Input is not a valid parenthetical value without root');
   }
+  const sortedLevels = Object.keys(levelValue).map(levelValue => Number(levelValue)).sort();
 
   console.log('rootDataKey', rootDataLevel);
-  const sortedValues = levelValue[rootDataLevel].values.sort();
-  console.log('sortedValues', sortedValues);
+  console.log('sortedLevels', sortedLevels);
+  const sortedRootValues = levelValue[rootDataLevel].values.sort();
+  console.log('sortedValues', sortedRootValues);
 
-  sortedValues.forEach((value) => {
+  const maxLevel = sortedLevels.pop();
+  console.log('maxLevel', maxLevel);
+
+  sortedRootValues.forEach((value) => {
+
     output += ('\n' + (new Array(Number(rootDataLevel) * 2).join(' ')) + `- ${value}`);
+    let currentLevel = Number(rootDataLevel);
 
-      if (levelValue[Number(rootDataLevel) + 1]?.parent === value) {
-        const childValuesSorted = levelValue[Number(rootDataLevel) + 1].values.sort();
-
-        childValuesSorted.forEach((value) => {
-          output += ('\n' + (new Array((Number(rootDataLevel) + 1) * 2).join(' ')) + `- ${value}`);
-
-          if (levelValue[Number(rootDataLevel) + 2]?.parent === value) {
-            const grandChildValuesSorted = levelValue[Number(rootDataLevel) + 2].values.sort();
-            grandChildValuesSorted.forEach((value) => {
-              output += ('\n' + (new Array((Number(rootDataLevel) + 2) * 2).join(' ')) + `- ${value}`);
-            });
-          }
-        });
-      }
+    if (maxLevel && currentLevel < maxLevel) {
+      const childLevel = Number(rootDataLevel) + 1;
+      output += setLevelOutputs(levelValue, `${childLevel}`, maxLevel, value);
+    }
   });
 
   console.log('level value', levelValue)
   console.log('output value', output)
 
   return '';
+}
+
+function setLevelOutputs(levelValue: LevelValue, currentLevel: string, maxLevel: number, currentValue: string): string {
+  let output = '';
+  if (levelValue[currentLevel]?.parent === currentValue) {
+    const childValuesSorted = levelValue[currentLevel].values.sort();
+
+    childValuesSorted.forEach((value) => {
+      output += ('\n' + (new Array((Number(currentLevel)) * 2).join(' ')) + `- ${value}`);
+
+      if (Number(currentLevel) < maxLevel) {
+        output += setLevelOutputs(levelValue, `${Number(currentLevel) + 1}`, maxLevel, value);
+      }
+    });
+  }
+
+  return output;
+
 }
 
 function setLevelValue(levelValue: LevelValue, currentLevel: number, currentValue: string) {
