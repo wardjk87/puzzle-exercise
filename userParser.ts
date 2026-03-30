@@ -73,13 +73,9 @@ function userParserWithSort(input: string): string {
   }
   const sortedLevels = Object.keys(levelValue).map(levelValue => Number(levelValue)).sort();
 
-  console.log('rootDataKey', rootDataLevel);
-  console.log('sortedLevels', sortedLevels);
   const sortedRootValues = levelValue[rootDataLevel].values.sort();
-  console.log('sortedValues', sortedRootValues);
 
   const maxLevel = sortedLevels.pop();
-  console.log('maxLevel', maxLevel);
 
   sortedRootValues.forEach((value) => {
 
@@ -92,10 +88,8 @@ function userParserWithSort(input: string): string {
     }
   });
 
-  console.log('level value', levelValue)
   console.log('output value', output)
-
-  return '';
+  return output;
 }
 
 function setLevelOutputs(levelValue: LevelValue, currentLevel: string, maxLevel: number, currentValue: string): string {
@@ -196,7 +190,6 @@ function userParser(input: string): string {
       continue;
     }
   }
-
   return output;
 }
 
