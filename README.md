@@ -39,8 +39,8 @@ And also to this output:
   - name
 ```
 
-Please send access to the source and a runnable copy of your app. 
 
 Instructions to run:
-Copy and Paster userParser.ts into typescript playground:
+
+Copy and Paste userParser.ts into typescript playground:
 https://www.typescriptlang.org/play/

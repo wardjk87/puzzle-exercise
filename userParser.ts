@@ -71,8 +71,8 @@ function userParserV2(input: string): string {
     }
 
     const sortedLevels = Object.keys(levelValue).map(levelValue => Number(levelValue)).sort();
-    const sortedRootValues = levelValue[rootDataLevel].values.sort();
     const maxLevel = sortedLevels.pop();
+    const sortedRootValues = levelValue[rootDataLevel].values.sort();
 
     sortedRootValues.forEach((value) => {
       output += ('\n' + (new Array(Number(rootDataLevel) * 2).join(' ')) + `- ${value}`);
@@ -139,7 +139,6 @@ function parseInputIntoLevelObject(processedInput: string): LevelValue {
 
       currentLevel -= 1;
       currentValue = '';
-      continue;
     }
   }
 
