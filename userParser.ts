@@ -1,6 +1,6 @@
-const TEST_INPUT = "(id, name, email, type(id, name, customFields(c1, c2, c3)), externalId)";
+const TEST_INPUT = "(id, name, email, type(id, name, customFields(c1, c2, c3)), externalId, config(fontSettings, screenSettings))";
 
-type LevelValue = { [level: string]: {values: string[], parent: string }};
+type LevelValue = {values: string[], parent: string, level: number };
 
 // userParserV1: Returns unsorted output
 function userParserV1(input: string): string {
@@ -20,7 +20,7 @@ function userParserV1(input: string): string {
       const isLastValue = i === processedInput.length - 1;
 
       if (indexValue === ',' || isLastValue) {
-        if (isLastValue) {
+        if (isLastValue && currentValue && indexValue !== ')') {
           currentValue += indexValue;
         }
 
@@ -62,25 +62,28 @@ function userParserV2(input: string): string {
   try {
     const processedInput = prepareInputForParser(input);
     const levelValue = parseInputIntoLevelObject(processedInput);
+    console.log('levelValue1', levelValue);
     let output = '';
 
-    const rootDataLevel = Object.keys(levelValue).find(key => levelValue[key].parent === 'root');
+    const rootLevel = levelValue.find(data => data.parent === 'root');
+    console.log('rootLevel', rootLevel)
+    const rootDataLevel = rootLevel?.level;
 
-    if (!rootDataLevel) {
+    if (rootDataLevel === undefined || isNaN(rootDataLevel)) {
       throw new Error('LevelValue object does not contain a root');
     }
 
-    const sortedLevels = Object.keys(levelValue).map(levelValue => Number(levelValue)).sort();
+    const sortedLevels = levelValue.map(levelValue => levelValue.level).sort();
     const maxLevel = sortedLevels.pop();
-    const sortedRootValues = levelValue[rootDataLevel].values.sort();
+    const sortedRootValues = rootLevel.values.sort();
 
     sortedRootValues.forEach((value) => {
-      output += ('\n' + (new Array(Number(rootDataLevel) * 2).join(' ')) + `- ${value}`);
-      let currentLevel = Number(rootDataLevel);
+      output += ('\n' + (new Array(rootDataLevel * 2).join(' ')) + `- ${value}`);
+      let currentLevel = rootDataLevel;
 
       if (maxLevel && currentLevel < maxLevel) {
-        const childLevel = Number(rootDataLevel) + 1;
-        output += setLevelOutputs(levelValue, `${childLevel}`, maxLevel, value);
+        const childLevel = currentLevel + 1;
+        output += setLevelOutputs(levelValue, childLevel, maxLevel, value);
       }
     });
 
@@ -91,10 +94,10 @@ function userParserV2(input: string): string {
   }
 }
 
-function parseInputIntoLevelObject(processedInput: string): LevelValue {
+function parseInputIntoLevelObject(processedInput: string): LevelValue[] {
   let currentValue: string = '';
   let currentLevel = 0;
-  let levelValue: LevelValue = {};
+  let levelValue: LevelValue[] = [];
 
   for (let i = 0; i < processedInput.length; i++) {
     const indexValue = processedInput[i];
@@ -106,7 +109,7 @@ function parseInputIntoLevelObject(processedInput: string): LevelValue {
     const lastValue = i === processedInput.length - 1;
 
     if (indexValue === ',' || lastValue) {
-      if (lastValue) {
+      if (lastValue && indexValue !== ')') {
         currentValue += indexValue;
       }
 
@@ -145,33 +148,58 @@ function parseInputIntoLevelObject(processedInput: string): LevelValue {
   return levelValue;
 }
 
-function setLevelValue(levelValue: LevelValue, currentLevel: number, currentValue: string) {
-  const updatedLevelValue = {...levelValue};
-  if (levelValue[`${currentLevel}`]?.values){
-    updatedLevelValue[`${currentLevel}`].values = [...levelValue[`${currentLevel}`].values, currentValue];
+function setLevelValue(levelValue: LevelValue[], currentLevel: number, currentValue: string) {
+  let updatedLevelValue = [...levelValue];
+  let parent = 'root';
+
+  if (currentLevel > 0) {
+    const previousLevelValue = levelValue.filter(data => data.level === (currentLevel - 1)).pop();
+    parent = previousLevelValue?.values[previousLevelValue.values.length - 1] ?? '';
+    if (!parent) {
+      throw new Error("Parent not found")
+    }
+  }
+
+  if (levelValue.some(data => data.level === currentLevel && data.parent === parent)){
+    console.log('has already')
+    updatedLevelValue = updatedLevelValue.map(data => {
+      if (data.level === currentLevel && data.parent === parent) {
+        return {...data, values: [...data.values, currentValue]}
+      }
+      return data;
+    });
   } else {
     if (currentLevel > 0) {
-      const valuesOfPreviousLevel = levelValue[`${currentLevel - 1}`].values;
-      const parent= valuesOfPreviousLevel[valuesOfPreviousLevel.length - 1];
-      updatedLevelValue[`${currentLevel}`] = { parent, values: [currentValue] };
+      updatedLevelValue.push({ parent, values: [currentValue], level: currentLevel });
     } else {
-      updatedLevelValue[`${currentLevel}`] = { parent: 'root', values: [currentValue] };
+      updatedLevelValue.push({ parent, values: [currentValue], level: currentLevel });
     }
   }
 
   return updatedLevelValue;
 }
 
-function setLevelOutputs(levelValue: LevelValue, currentLevel: string, maxLevel: number, currentValue: string): string {
+function setLevelOutputs(levelValue: LevelValue[], currentLevel: number, maxLevel: number, currentValue: string): string {
   let output = '';
-  if (levelValue[currentLevel]?.parent === currentValue) {
+
+  let parent = 'root';
+
+  if (currentLevel > 0) {
+    const previousLevelValue = levelValue.filter(data => data.level === (currentLevel - 1)).pop();
+    parent = previousLevelValue?.values[previousLevelValue.values.length - 1] ?? '';
+    if (!parent) {
+      throw new Error("Parent not found")
+    }
+  }
+
+  if (parent === currentValue) {
     const childValuesSorted = levelValue[currentLevel].values.sort();
 
     childValuesSorted.forEach((value) => {
-      output += ('\n' + (new Array((Number(currentLevel)) * 2).join(' ')) + `- ${value}`);
+      output += ('\n' + (new Array((currentLevel) * 2).join(' ')) + `- ${value}`);
 
       if (Number(currentLevel) < maxLevel) {
-        output += setLevelOutputs(levelValue, `${Number(currentLevel) + 1}`, maxLevel, value);
+        output += setLevelOutputs(levelValue, currentLevel, maxLevel, value);
       }
     });
   }
@@ -204,8 +232,8 @@ function prepareInputForParser(input: string): string {
   return removeRootParenthesis(inputTrimmed)
 }
 
-const outputV1 = userParserV1(TEST_INPUT);
+// const outputV1 = userParserV1(TEST_INPUT);
 const outputV2 = userParserV2(TEST_INPUT);
-console.log('userParserV1 output: ', outputV1)
+// console.log('userParserV1 output: ', outputV1)
 console.log('userParserV2 output: ', outputV2)
 
