@@ -6,7 +6,6 @@ type LevelValue = { [level: string]: {values: string[], parent: string }};
 function userParserV1(input: string): string {
   try {
     const processedInput = prepareInputForParser(input);
-
     let output: string = '';
     let leadingWhiteSpaces = 0;
     let currentValue: string = '';
@@ -51,39 +50,60 @@ function userParserV1(input: string): string {
 
       currentValue = '';
     }
-    console.log('test1', output)
     return output;
   } catch (e) {
     console.error(e);
     return '';
   }
-
 }
 
-function userParserWithSort(input: string): string {
-  if (typeof input !== "string"){
-    throw new Error('Input is not a valid string')
+// userParserV2: Returns sorted output
+function userParserV2(input: string): string {
+  try {
+    const processedInput = prepareInputForParser(input);
+    const levelValue = parseInputIntoLevelObject(processedInput);
+    let output = '';
+
+    const rootDataLevel = Object.keys(levelValue).find(key => levelValue[key].parent === 'root');
+
+    if (!rootDataLevel) {
+      throw new Error('LevelValue object does not contain a root');
+    }
+
+    const sortedLevels = Object.keys(levelValue).map(levelValue => Number(levelValue)).sort();
+    const sortedRootValues = levelValue[rootDataLevel].values.sort();
+    const maxLevel = sortedLevels.pop();
+
+    sortedRootValues.forEach((value) => {
+      output += ('\n' + (new Array(Number(rootDataLevel) * 2).join(' ')) + `- ${value}`);
+      let currentLevel = Number(rootDataLevel);
+
+      if (maxLevel && currentLevel < maxLevel) {
+        const childLevel = Number(rootDataLevel) + 1;
+        output += setLevelOutputs(levelValue, `${childLevel}`, maxLevel, value);
+      }
+    });
+
+    return output;
+  } catch (e) {
+    console.error(e);
+    return '';
   }
-  const inputTrimmed = input.trim()
+}
 
-  if (inputTrimmed[0] !== '(' || inputTrimmed[inputTrimmed.length -1] !== ')') {
-    throw new Error('Input is not a valid parenthetical value');
-  }
-
-  const commaDelimitedValuesStringified = removeRootParenthesis(inputTrimmed)
-
+function parseInputIntoLevelObject(processedInput: string): LevelValue {
   let currentValue: string = '';
   let currentLevel = 0;
   let levelValue: LevelValue = {};
 
-  for (let i = 0; i < commaDelimitedValuesStringified.length; i++) {
-    const indexValue = commaDelimitedValuesStringified[i];
+  for (let i = 0; i < processedInput.length; i++) {
+    const indexValue = processedInput[i];
 
     if (indexValue === ' ') {
       continue;
     }
 
-    const lastValue = i === commaDelimitedValuesStringified.length - 1;
+    const lastValue = i === processedInput.length - 1;
 
     if (indexValue === ',' || lastValue) {
       if (lastValue) {
@@ -122,32 +142,25 @@ function userParserWithSort(input: string): string {
       continue;
     }
   }
-  let output = '';
 
-  const rootDataLevel = Object.keys(levelValue).find(key => levelValue[key].parent === 'root');
+  return levelValue;
+}
 
-  if (!rootDataLevel) {
-    throw new Error('Input is not a valid parenthetical value without root');
-  }
-  const sortedLevels = Object.keys(levelValue).map(levelValue => Number(levelValue)).sort();
-
-  const sortedRootValues = levelValue[rootDataLevel].values.sort();
-
-  const maxLevel = sortedLevels.pop();
-
-  sortedRootValues.forEach((value) => {
-
-    output += ('\n' + (new Array(Number(rootDataLevel) * 2).join(' ')) + `- ${value}`);
-    let currentLevel = Number(rootDataLevel);
-
-    if (maxLevel && currentLevel < maxLevel) {
-      const childLevel = Number(rootDataLevel) + 1;
-      output += setLevelOutputs(levelValue, `${childLevel}`, maxLevel, value);
+function setLevelValue(levelValue: LevelValue, currentLevel: number, currentValue: string) {
+  const updatedLevelValue = {...levelValue};
+  if (levelValue[`${currentLevel}`]?.values){
+    updatedLevelValue[`${currentLevel}`].values = [...levelValue[`${currentLevel}`].values, currentValue];
+  } else {
+    if (currentLevel > 0) {
+      const valuesOfPreviousLevel = levelValue[`${currentLevel - 1}`].values;
+      const parent= valuesOfPreviousLevel[valuesOfPreviousLevel.length - 1];
+      updatedLevelValue[`${currentLevel}`] = { parent, values: [currentValue] };
+    } else {
+      updatedLevelValue[`${currentLevel}`] = { parent: 'root', values: [currentValue] };
     }
-  });
+  }
 
-  console.log('output value', output)
-  return output;
+  return updatedLevelValue;
 }
 
 function setLevelOutputs(levelValue: LevelValue, currentLevel: string, maxLevel: number, currentValue: string): string {
@@ -168,31 +181,10 @@ function setLevelOutputs(levelValue: LevelValue, currentLevel: string, maxLevel:
 
 }
 
-function setLevelValue(levelValue: LevelValue, currentLevel: number, currentValue: string) {
-  const updatedLevelValue = {...levelValue};
-  if (levelValue[`${currentLevel}`]?.values){
-    updatedLevelValue[`${currentLevel}`].values = [...levelValue[`${currentLevel}`].values, currentValue];
-  } else {
-    if (currentLevel > 0) {
-      const valuesOfPreviousLevel = levelValue[`${currentLevel - 1}`].values;
-      const parent= valuesOfPreviousLevel[valuesOfPreviousLevel.length - 1];
-      updatedLevelValue[`${currentLevel}`] = { parent, values: [currentValue] };
-    } else {
-      updatedLevelValue[`${currentLevel}`] = { parent: 'root', values: [currentValue] };
-    }
-  }
-
-  return updatedLevelValue;
-}
-
-
-
 function addNewLine(leadingWhiteSpaces: number, currentValue: string) {
   if (leadingWhiteSpaces) {
-    // parentValues.push('\n' + (new Array(leadingWhiteSpaces).join(' ')) + `- ${currentValue}`);
     return ('\n' + (new Array(leadingWhiteSpaces).join(' ')) + `- ${currentValue}`);
   }
-  // parentValues.push(`\n- ${currentValue}`);
   return (`\n- ${currentValue}`);
 }
 
@@ -213,7 +205,8 @@ function prepareInputForParser(input: string): string {
   return removeRootParenthesis(inputTrimmed)
 }
 
-// userParserWithSort(TEST_INPUT);
+const outputV1 = userParserV1(TEST_INPUT);
+const outputV2 = userParserV2(TEST_INPUT);
+console.log('userParserV1 output: ', outputV1)
+console.log('userParserV2 output: ', outputV2)
 
-
-userParserV1(TEST_INPUT);
