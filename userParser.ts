@@ -167,11 +167,7 @@ function setLevelValue(levelValue: LevelValue[], currentLevel: number, currentVa
       return data;
     });
   } else {
-    if (currentLevel > 0) {
-      updatedLevelValue.push({ parent, values: [currentValue], level: currentLevel });
-    } else {
-      updatedLevelValue.push({ parent, values: [currentValue], level: currentLevel });
-    }
+    updatedLevelValue.push({ parent, values: [currentValue], level: currentLevel });
   }
 
   return updatedLevelValue;
